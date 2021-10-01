@@ -76,11 +76,21 @@ function loadHome() {
         homeData = homeDataset.data;
     };
     req.send();
-    let changeArray = homeData.map(val, index => val.changePercent24Hr);
-    let topThree = changeArray.sort((a, b) => b - a).slice(0, 3);
-    console.log(topThree);
-    let mainDiv = document.createElement('div');
-    mainDiv.classList.add('main-home');
+    let sortedArr = homeData.sort((a, b) => b.changePercent24Hr - a.changePercent24Hr);
+    let topThree = sortedArr.slice(0, 3);
+    let bottomThree = sortedArr.slice(sortedArr.length - 3);
+    topThree.forEach(coin => createSquareCard(coin));
+    bottomThree.forEach(coin => createSquareCard(coin));
+
+    let gainLossHead = document.createElement('div');
+    gainLossHead.classList.add('gain-loss-header');
+    gainLossHead.innerHTML = 
+        `<div class="header-wrap">
+        <h3 class="section-title">Top Movers</h3>
+        </div>
+        `;
+    gainLossHead.style.order = 1;
+    container.appendChild(gainLossHead);
 }
 
 function drawBoxes() {
@@ -92,6 +102,30 @@ function drawNews() {
     let targetArticles = articles.slice(0, 11);
     clearContainer();
     targetArticles.forEach(article => createNewsCard(article));
+}
+
+function createSquareCard(coin) {
+    let coinBox = document.createElement('div');
+    let iconUrl = `https://api.coinicons.net/icon/` + coin.symbol + `/64x64`;
+    coinBox.id = coin.id;
+    let formattedPrice = formatNum.format(coin.priceUsd);
+    let formattedChange = formatNum.format(coin.changePercent24Hr);
+    let adjustedColor;
+        if (formattedChange > 0) { adjustedColor = '#27ae60' }
+        else if (formattedChange < 0) { adjustedColor = '#e74c3c' }
+        else { adjustedColor = '#2c3e50' };
+    coinBox.classList.add('coin-box-square');
+    coinBox.innerHTML = 
+        `<div class="head-span-square"><i><img src="${iconUrl}" class="coin-icon"></i>
+        <span class="symbol-square">${coin.symbol} <br />
+            <span class="price-square">$${formattedPrice}</span>
+        </span>
+        </div>
+        <span class="percent-change-square" style="color:${adjustedColor}">${formattedChange}%</span>
+        `;
+    coinBox.style.order = 2;
+    container.appendChild(coinBox);
+
 }
 
 function createCard(coin) {
@@ -162,9 +196,10 @@ function loadingContent() {
 function getCoins() {
     activePage = 'topCoins';
     req.open('GET', url);
+    /*
     req.onprogress = () => {
         loadingContent();
-    }
+    }*/
     req.onerror = () => {
         handleLoadError();
     };
@@ -179,9 +214,6 @@ function getCoins() {
 function getNews() {
     activePage = 'news';
     req.open('GET', newsUrl);
-    req.onprogress = () => {
-    loadingContent();
-}
     req.onload = () => {
         news = JSON.parse(req.responseText);
         articles = news.Data;
