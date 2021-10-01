@@ -7,56 +7,96 @@ let values = [];
 let icons = [];
 let news;
 let articles = [];
+let homeDataset = [];
+let homeData = [];
+
+let activePage = 'topCoins';
 
 const container = document.getElementById('content');
 
 const formatNum = new Intl.NumberFormat(undefined, { minimumFractionDigits: 3 });
 
+//Search
+const searchBar = document.getElementById('search-bar');
+
+searchBar.addEventListener('keyup', (e) => {
+    const searchString = e.target.value.toLowerCase();
+    let filteredVals;
+
+    if (activePage === 'topCoins' || activePage === 'home') {
+        filteredVals = values.filter((val) => {
+            return (
+                val.id.toLowerCase().includes(searchString) ||
+                val.name.toLowerCase().includes(searchString) ||
+                val.symbol.toLowerCase().includes(searchString)
+            );
+        });      
+        clearContainer();
+        filteredVals.forEach(val => createCard(val));
+
+    } else if (activePage === 'news') {
+        filteredVals = articles.filter((article) => {
+            return (
+                article.title.toLowerCase().includes(searchString) ||
+                article.categories.toLowerCase().includes(searchString)
+            );
+        })
+        clearContainer();
+        filteredVals.forEach(val => createNewsCard(val));
+};
+
+
+});
+
+
 //Error Handling
-function reloadAPI() {
-    location.reload();
-    return false;
+function reloadPage() {
+    if (activePage === 'topCoins') { getCoins(); }
+    else if (activePage === 'news') { getNews(); }
 }
 
 function handleLoadError() {
+    clearContainer();
     let errorMsg = document.createElement('div');
     errorMsg.classList.add('error-box');
     errorMsg.innerHTML = 
         `<span class="error-text">Failed to load</span><br />
-        <button class="error-btn" onclick="reloadAPI()">Reload <i class="fas fa-redo"></i></button>
+        <button class="error-btn" onclick="reloadPage()">Reload <i class="fas fa-redo"></i></button>
         `;
     container.appendChild(errorMsg);
 }
 
 //Content
+function loadHome() {
+    clearContainer();
+    activePage = 'home';
+    req.open('GET', url);
+    req.onload = () => {
+        homeDataset = JSON.parse(req.responseText);
+        homeData = homeDataset.data;
+    };
+    req.send();
+    let changeArray = homeData.map(val, index => val.changePercent24Hr);
+    let topThree = changeArray.sort((a, b) => b - a).slice(0, 3);
+    console.log(topThree);
+    let mainDiv = document.createElement('div');
+    mainDiv.classList.add('main-home');
+}
+
 function drawBoxes() {
     clearContainer();
     values.forEach(val => createCard(val));
 }
 
 function drawNews() {
+    let targetArticles = articles.slice(0, 11);
     clearContainer();
-    let targetArticles = articles.slice(0, 9);
-    targetArticles.forEach(article => {
-        let articleCard = document.createElement('div');
-        let articleDate = new Date(1000 * article.published_on);
-        articleCard.classList.add('article-card');
-        articleCard.innerHTML = 
-            `<img class="article-img" src="${article.imageurl}"></img>
-            <div class="article-text-box">
-            <span class="article-title">${article.title}</span> <br />
-            <div class="article-bottom">
-            <span class="article-date">${articleDate.toLocaleDateString()}</span>
-            <span class="article-source">Source: <a href="${article.url}" target="_blank">${article.source}</a></span>
-            </div></div>
-            `;
-        container.appendChild(articleCard);
-    })
+    targetArticles.forEach(article => createNewsCard(article));
 }
 
 function createCard(coin) {
     let coinBox = document.createElement('div');
-    let iconUrl = `https://api.coinicons.net/icon/` + coin.symbol.toLowerCase() + `/64x64`;
+    let iconUrl = `https://api.coinicons.net/icon/` + coin.symbol + `/64x64`;
     coinBox.id = coin.id;
     let formattedPrice = formatNum.format(coin.priceUsd);
     let formattedChange = formatNum.format(coin.changePercent24Hr);
@@ -78,27 +118,70 @@ function createCard(coin) {
 
 }
 
+function createNewsCard(article) {
+    let articleCard = document.createElement('div');
+    let articleDate = new Date(1000 * article.published_on);
+    articleCard.classList.add('article-card');
+    articleCard.innerHTML = 
+        `<img class="article-img" src="${article.imageurl}"></img>
+        <div class="article-text-box">
+        <span class="article-title">${article.title}</span> <br />
+        <div class="article-bottom">
+        <span class="article-date">${articleDate.toLocaleDateString()}</span>
+        <span class="article-source">Source: <a href="${article.url}" target="_blank">${article.source}</a></span>
+        </div></div>
+        `;
+    container.appendChild(articleCard);
+}
+
 function clearContainer() {
     while (container.firstChild) {
         container.removeChild(container.lastChild);
     }
 }
 
+function clearField() {
+    searchBar.value = '';
+    if (activePage === 'topCoins') { drawBoxes(); }
+    else if (activePage === 'news') { drawNews(); }
+}
+
+function loadingContent() {
+    clearContainer();
+    searchBar.value = '';
+    let loadingBox = document.createElement('div');
+    loadingBox.classList.add('loading-wrap');
+    loadingBox.innerHTML = 
+        `<p>Content loading</p>
+        `;
+    container.appendChild(loadingBox);
+}
+
 
 //API Calls
-req.open('GET', url);
-req.onerror = () => {
-    handleLoadError();
-};
-req.onload = () => {
-    dataset = JSON.parse(req.responseText);
-    values = dataset.data;
-    drawBoxes();
-};
-req.send();
+function getCoins() {
+    activePage = 'topCoins';
+    req.open('GET', url);
+    req.onprogress = () => {
+        loadingContent();
+    }
+    req.onerror = () => {
+        handleLoadError();
+    };
+    req.onload = () => {
+        dataset = JSON.parse(req.responseText);
+        values = dataset.data;
+        drawBoxes();
+    };
+    req.send();
+}
 
 function getNews() {
+    activePage = 'news';
     req.open('GET', newsUrl);
+    req.onprogress = () => {
+    loadingContent();
+}
     req.onload = () => {
         news = JSON.parse(req.responseText);
         articles = news.Data;

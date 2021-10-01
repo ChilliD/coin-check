@@ -29,6 +29,15 @@ header {
 
 .logo-wrap {
     font-style: italic;
+    display: flex;
+    align-items: center;
+}
+
+.logo-wrap i {
+    font-size: 2em;
+    padding: .15em;
+    color: #3742fa;
+    opacity: .9;
 }
 
 .logo1 {
@@ -36,26 +45,44 @@ header {
 }
 
 .search-wrap {
+    background-color: #ecf0f1;
     display: flex;
     justify-content: center;
+    align-items: center;
     border: 1px solid #95a5a6;
     border-radius: 1em;
     margin-left: 1em;
+    box-sizing: border-box;
+    width: 40%;
+}
+
+.search-wrap:focus-within {
+    border: 1px solid #3742fa;
 }
 
 .search-bar {
     background-color: #ecf0f1;
     border: none;
     border-radius: 1em;
-    padding: .2em;
+    padding: .5em;
+    height: 100%;
+    width: 100%;
+}
+
+.search-bar:focus {
+    outline: none;
+}
+
+.clear-field {
+    font-size: 1.3em;
+    opacity: .65;
+    padding: .25em;
 }
 
 .submit-btn {
     border-radius: 1em;
-    border: none;
-    background-color: #e2e8e9;
     padding: .5em;
-    text-align: center;
+    opacity: .5;
 }
 
 main {
@@ -63,7 +90,7 @@ main {
     overflow: scroll;
 }
 
-.coin-boxes {
+.content {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
@@ -172,8 +199,8 @@ nav {
 }
 
 .article-img {
-    height: 60%;
     width: 15%;
+    max-width: 140px;
     border-radius: 1em;
 }
 
