@@ -10,11 +10,12 @@ let articles = [];
 let homeDataset = [];
 let homeData = [];
 
-let activePage = 'topCoins';
-
 const container = document.getElementById('content');
 
 const formatNum = new Intl.NumberFormat(undefined, { minimumFractionDigits: 3 });
+const formatBigNum = new Intl.NumberFormat(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 7 });
+const formatVol = new Intl.NumberFormat(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+const formatNumNoDec = new Intl.NumberFormat(undefined, { maximumFractionDigits:0 });
 
 //Search
 const searchBar = document.getElementById('search-bar');
@@ -23,7 +24,7 @@ searchBar.addEventListener('keyup', (e) => {
     const searchString = e.target.value.toLowerCase();
     let filteredVals;
 
-    if (activePage === 'topCoins' || activePage === 'home') {
+    if (activePage === 'topCoins') {
         filteredVals = values.filter((val) => {
             return (
                 val.id.toLowerCase().includes(searchString) ||
@@ -40,10 +41,20 @@ searchBar.addEventListener('keyup', (e) => {
                 article.title.toLowerCase().includes(searchString) ||
                 article.categories.toLowerCase().includes(searchString)
             );
-        })
+        });
         clearContainer();
         filteredVals.forEach(val => createNewsCard(val));
-};
+    } else if (activePage === 'home') {
+        filteredVals = homeData.filter((val) => {
+            return (
+                val.id.toLowerCase().includes(searchString) ||
+                val.name.toLowerCase().includes(searchString) ||
+                val.symbol.toLowerCase().includes(searchString)
+            );
+        });
+        clearContainer();
+        filteredVals.forEach(val => createCard(val));
+    };
 
 
 });
@@ -53,6 +64,7 @@ searchBar.addEventListener('keyup', (e) => {
 function reloadPage() {
     if (activePage === 'topCoins') { getCoins(); }
     else if (activePage === 'news') { getNews(); }
+    else if (activePage === 'home') { loadHome(); }
 }
 
 function handleLoadError() {
@@ -74,23 +86,39 @@ function loadHome() {
     req.onload = () => {
         homeDataset = JSON.parse(req.responseText);
         homeData = homeDataset.data;
-    };
-    req.send();
-    let sortedArr = homeData.sort((a, b) => b.changePercent24Hr - a.changePercent24Hr);
-    let topThree = sortedArr.slice(0, 3);
-    let bottomThree = sortedArr.slice(sortedArr.length - 3);
-    topThree.forEach(coin => createSquareCard(coin));
-    bottomThree.forEach(coin => createSquareCard(coin));
 
-    let gainLossHead = document.createElement('div');
-    gainLossHead.classList.add('gain-loss-header');
-    gainLossHead.innerHTML = 
-        `<div class="header-wrap">
-        <h3 class="section-title">Top Movers</h3>
-        </div>
-        `;
-    gainLossHead.style.order = 1;
-    container.appendChild(gainLossHead);
+        let volumeArr = homeData.sort((a, b) => b.volumeUsd24Hr - a.volumeUsd24Hr);
+        let topVolume = volumeArr.slice(0, 6);
+        let sortedArr = homeData.sort((a, b) => b.changePercent24Hr - a.changePercent24Hr);
+        let topThree = sortedArr.slice(0, 3);
+        let bottomThree = sortedArr.slice(sortedArr.length - 3);
+        topThree.forEach(coin => createSquareCard(coin));
+        bottomThree.forEach(coin => createSquareCard(coin));
+        topVolume.forEach(coin => createVolCard(coin));
+    
+        let gainLossHead = document.createElement('div');
+        gainLossHead.classList.add('home-section-header');
+        gainLossHead.innerHTML = 
+            `<div class="header-wrap">
+            <h3 class="section-title">Top Movers</h3>
+            </div>
+            `;
+        gainLossHead.style.order = 1;
+        container.appendChild(gainLossHead);
+    
+        let volumeHead = document.createElement('div');
+        volumeHead.classList.add('home-section-header');
+        volumeHead.innerHTML = 
+            `<div class="header-wrap">
+            <h3 class="section-title">Top Trading Volume 24hrs</h3>
+            </div>
+            `;
+        volumeHead.style.order = 3;
+        container.appendChild(volumeHead);
+    };
+    req.onerror = () => { reloadPage(); };
+    req.send();
+
 }
 
 function drawBoxes() {
@@ -99,23 +127,23 @@ function drawBoxes() {
 }
 
 function drawNews() {
-    let targetArticles = articles.slice(0, 11);
+    let targetArticles = articles.slice(0, 20);
     clearContainer();
     targetArticles.forEach(article => createNewsCard(article));
 }
 
 function createSquareCard(coin) {
-    let coinBox = document.createElement('div');
+    let squareBox = document.createElement('div');
     let iconUrl = `https://api.coinicons.net/icon/` + coin.symbol + `/64x64`;
-    coinBox.id = coin.id;
+    squareBox.id = coin.id + 'square';
     let formattedPrice = formatNum.format(coin.priceUsd);
     let formattedChange = formatNum.format(coin.changePercent24Hr);
     let adjustedColor;
         if (formattedChange > 0) { adjustedColor = '#27ae60' }
         else if (formattedChange < 0) { adjustedColor = '#e74c3c' }
         else { adjustedColor = '#2c3e50' };
-    coinBox.classList.add('coin-box-square');
-    coinBox.innerHTML = 
+    squareBox.classList.add('coin-box-square');
+    squareBox.innerHTML = 
         `<div class="head-span-square"><i><img src="${iconUrl}" class="coin-icon"></i>
         <span class="symbol-square">${coin.symbol} <br />
             <span class="price-square">$${formattedPrice}</span>
@@ -123,8 +151,30 @@ function createSquareCard(coin) {
         </div>
         <span class="percent-change-square" style="color:${adjustedColor}">${formattedChange}%</span>
         `;
-    coinBox.style.order = 2;
-    container.appendChild(coinBox);
+    squareBox.style.order = 2;
+    squareBox.addEventListener('click', function(){ drawCoinPage(coin) });
+    container.appendChild(squareBox);
+
+}
+
+function createVolCard(coin) {
+    let volBox = document.createElement('div');
+    let iconUrl = `https://api.coinicons.net/icon/` + coin.symbol + `/64x64`;
+    volBox.id = coin.id + 'vol';
+    let formattedPrice = formatNum.format(coin.priceUsd);
+    let formattedVol = formatVol.format(coin.volumeUsd24Hr);
+    volBox.classList.add('volume-box');
+    volBox.innerHTML = 
+        `<div class="head-span-vol"><i><img src="${iconUrl}" class="coin-icon"></i>
+        <span class="symbol-vol">${coin.symbol} <br />
+            <span class="price-vol">$${formattedPrice}</span>
+        </span>
+        </div>
+        <span class="volume-change">Trading Volume: <br /><span class="bold">${formattedVol}</span></span>
+        `;
+    volBox.style.order = 4;
+    volBox.addEventListener('click', function(){ drawCoinPage(coin) });
+    container.appendChild(volBox);
 
 }
 
@@ -148,6 +198,8 @@ function createCard(coin) {
         <span class="percent-change" style="color:${adjustedColor}">${formattedChange}%</span>
         </div>
         `;
+    let coinId = values.find(val => (val.id === coin.id));
+    coinBox.addEventListener('click', function(){ drawCoinPage(coinId) });
     container.appendChild(coinBox);
 
 }
@@ -168,6 +220,67 @@ function createNewsCard(article) {
     container.appendChild(articleCard);
 }
 
+function drawCoinPage(coin) {
+    clearContainer();
+    let wrapper = document.createElement('div');
+    let formattedPrice = formatBigNum.format(coin.priceUsd);
+    let formattedChange = formatNum.format(coin.changePercent24Hr);
+    let formattedSupply = formatNumNoDec.format(coin.supply);
+    let formattedMaxSupply = formatNumNoDec.format(coin.maxSupply);
+    let formattedCap = formatNumNoDec.format(coin.marketCapUsd);
+    let formattedVol = formatVol.format(coin.volumeUsd24Hr);
+    let iconUrl = `https://api.coinicons.net/icon/` + coin.symbol + `/64x64`;
+    wrapper.classList.add('coin-wrap');
+    wrapper.innerHTML = 
+        `
+        <div class="head-span-big">
+            <div class="title-span">
+            <span class="page-title">${coin.name}</span><br />
+            <span class="coin-symbol">${coin.symbol}</span>
+            </div>
+            <span class="coin-icon"><img src="${iconUrl}"></img></span>
+        </div>
+        <div class="stats-wrap">
+            <div class="coin-stats">
+                <p>Price:</p> <p>$${formattedPrice}</p>
+            </div>
+            <div class="coin-stats">
+                <p>Market Cap:</p> <p>${formattedCap} (#${coin.rank})</p>
+            </div>
+            <div class="coin-stats">
+                <p>Price Change (24hrs):</p> <p>${formattedChange}%</p>
+            </div>
+            <div class="coin-stats">
+                <p>Volume (24 hrs):</p> <p>${formattedVol}</p>
+            </div>
+            <div class="coin-stats">
+                <p>Available Supply:</p> <p>${formattedSupply}</p>
+            </div>
+            <div class="coin-stats">
+                <p>Max Supply:</p> <p>${formattedMaxSupply}</p>
+            </div>
+        </div>
+        `;
+    let coinNews = [];
+    let coinArticles = [];
+    let coinNewsUrl = newsUrl;
+    req.open('GET', coinNewsUrl);
+    req.onload = () => {
+        coinNews = JSON.parse(req.responseText);
+        coinArticles = coinNews.Data;
+        let thisArticles = coinArticles.filter(article => {
+            return (
+                article.title.includes(coin.symbol) ||
+                article.title.toLowerCase().includes(coin.id) ||
+                article.categories.includes(coin.symbol) ||
+                article.categories.toLowerCase().includes(coin.id)
+            )});
+        thisArticles.forEach(article => createNewsCard(article));
+    };
+    req.send();
+    container.appendChild(wrapper);
+}
+
 function clearContainer() {
     while (container.firstChild) {
         container.removeChild(container.lastChild);
@@ -178,6 +291,7 @@ function clearField() {
     searchBar.value = '';
     if (activePage === 'topCoins') { drawBoxes(); }
     else if (activePage === 'news') { drawNews(); }
+    else if (activePage === 'home') { loadHome(); }
 }
 
 function loadingContent() {
@@ -192,16 +306,32 @@ function loadingContent() {
 }
 
 
+//Initialize
+initialLoad();
+loadHome();
+
+
 //API Calls
+function initialLoad() {
+    req.open('GET', url);
+    req.onerror = () => {
+        initialLoad();
+    };
+    req.onload = () => {
+        dataset = JSON.parse(req.responseText);
+        values = dataset.data;
+    };
+    req.send();
+}
+
 function getCoins() {
     activePage = 'topCoins';
     req.open('GET', url);
-    /*
-    req.onprogress = () => {
-        loadingContent();
-    }*/
+    /*req.onprogress = () => {
+        if (activePage === 'topCoins') { loadingContent(); }
+    };*/
     req.onerror = () => {
-        handleLoadError();
+        reloadPage();
     };
     req.onload = () => {
         dataset = JSON.parse(req.responseText);
