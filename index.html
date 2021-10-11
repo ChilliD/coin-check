@@ -17,7 +17,7 @@
         <div id="search-wrap" class="search-wrap">
             <span class="submit-btn"><i class="fas fa-search"></i></span>
             <input type="text" id="search-bar" class="search-bar">
-            <span class="clear-field" onclick="clearField()"><i class="fas fa-times-circle"></i></span>
+            <span class="clear-field" onclick="clearField()"><i id="x-button" class="fas fa-times-circle"></i></span>
         </div>
     </header>
     <main>
@@ -28,7 +28,7 @@
             <span class="navlink" onclick="loadHome()"><i class="fas fa-home"></i></span>
             <span class="navlink" onclick="getCoins()"><i class="fas fa-chart-bar"></i></span>
             <span class="navlink" onclick="getNews()"><i class="far fa-file-alt"></i></span>
-            <a href="#" class="navlink"><i class="far fa-user"></i></a>
+            <span class="navlink" onclick="showAppInfo()"><i class="far fa-user"></i></span>
         </nav>
     </footer>
     

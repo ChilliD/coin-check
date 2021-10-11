@@ -44,7 +44,7 @@ searchBar.addEventListener('keyup', (e) => {
         });
         clearContainer();
         filteredVals.forEach(val => createNewsCard(val));
-    } else if (activePage === 'home') {
+    } else {
         filteredVals = homeData.filter((val) => {
             return (
                 val.id.toLowerCase().includes(searchString) ||
@@ -56,15 +56,17 @@ searchBar.addEventListener('keyup', (e) => {
         filteredVals.forEach(val => createCard(val));
     };
 
-
+    let button = document.getElementById('x-button');
+    if (searchString.length > 0) { button.style.opacity = .65 }
+    else { button.style.opacity = .3 }
 });
-
 
 //Error Handling
 function reloadPage() {
     if (activePage === 'topCoins') { getCoins(); }
     else if (activePage === 'news') { getNews(); }
     else if (activePage === 'home') { loadHome(); }
+    else if (activePage === 'info') { showAppInfo(); }
 }
 
 function handleLoadError() {
@@ -81,6 +83,7 @@ function handleLoadError() {
 //Content
 function loadHome() {
     clearContainer();
+    clearField();
     activePage = 'home';
     req.open('GET', url);
     req.onload = () => {
@@ -93,7 +96,7 @@ function loadHome() {
         let topThree = sortedArr.slice(0, 3);
         let bottomThree = sortedArr.slice(sortedArr.length - 3);
         topThree.forEach(coin => createSquareCard(coin));
-        bottomThree.forEach(coin => createSquareCard(coin));
+        bottomThree.reverse().forEach(coin => createSquareCard(coin));
         topVolume.forEach(coin => createVolCard(coin));
     
         let gainLossHead = document.createElement('div');
@@ -123,12 +126,14 @@ function loadHome() {
 
 function drawBoxes() {
     clearContainer();
+    clearField();
     values.forEach(val => createCard(val));
 }
 
 function drawNews() {
     let targetArticles = articles.slice(0, 20);
     clearContainer();
+    clearField();
     targetArticles.forEach(article => createNewsCard(article));
 }
 
@@ -198,7 +203,9 @@ function createCard(coin) {
         <span class="percent-change" style="color:${adjustedColor}">${formattedChange}%</span>
         </div>
         `;
-    let coinId = values.find(val => (val.id === coin.id));
+    let coinId;
+    if (activePage == 'topCoins') { coinId = values.find(val => (val.id === coin.id)); }
+    else { coinId = homeData.find(val => (val.id === coin.id)); }
     coinBox.addEventListener('click', function(){ drawCoinPage(coinId) });
     container.appendChild(coinBox);
 
@@ -217,6 +224,37 @@ function createNewsCard(article) {
         <span class="article-source">Source: <a href="${article.url}" target="_blank">${article.source}</a></span>
         </div></div>
         `;
+
+    articleCard.addEventListener('click', function(e) {
+        if (e.target.tagName == 'A') {
+            return true;
+        } else {
+            if (e.target.classList.contains('active-article')) {
+                e.target.classList.remove('active-article');
+                e.target.innerHTML = 
+                `<img class="article-img" src="${article.imageurl}"></img>
+                <div class="article-text-box">
+                <span class="article-title">${article.title}</span> <br />
+                <div class="article-bottom">
+                <span class="article-date">${articleDate.toLocaleDateString()}</span>
+                <span class="article-source">Source: <a href="${article.url}" target="_blank">${article.source}</a></span>
+                </div></div>
+                `;
+            } else {
+                e.target.classList.add('active-article');
+                e.target.innerHTML = 
+                `<img class="article-img" src="${article.imageurl}"></img>
+                <div class="article-text-box">
+                <span class="article-title">${article.title}</span> <br />
+                <span class="article-body">${article.body}</span>
+                <div class="article-bottom">
+                <span class="article-date">${articleDate.toLocaleDateString()}</span>
+                <span class="article-source">Source: <a href="${article.url}" target="_blank">${article.source}</a></span>
+                </div></div>
+                `;
+            }
+        }
+    });
     container.appendChild(articleCard);
 }
 
@@ -237,8 +275,9 @@ function drawCoinPage(coin) {
             <div class="title-span">
             <span class="page-title">${coin.name}</span><br />
             <span class="coin-symbol">${coin.symbol}</span>
+            <i id="close-page" class="far fa-times-circle close-page" onclick="reloadPage()"></i>
             </div>
-            <span class="coin-icon"><img src="${iconUrl}"></img></span>
+            <span class="coin-icon-big"><img src="${iconUrl}"></img></span>
         </div>
         <div class="stats-wrap">
             <div class="coin-stats">
@@ -288,10 +327,13 @@ function clearContainer() {
 }
 
 function clearField() {
-    searchBar.value = '';
-    if (activePage === 'topCoins') { drawBoxes(); }
-    else if (activePage === 'news') { drawNews(); }
-    else if (activePage === 'home') { loadHome(); }
+    if (searchBar.value) {
+        searchBar.value = '';
+        reloadPage();
+    };
+
+    let button = document.getElementById('x-button');
+    button.style.opacity = .3;
 }
 
 function loadingContent() {
@@ -305,6 +347,23 @@ function loadingContent() {
     container.appendChild(loadingBox);
 }
 
+function showAppInfo() {
+    activePage = 'info';
+    clearContainer();
+    clearField();
+    let infoBox = document.createElement('div');
+    infoBox.classList.add('info-wrap');
+    infoBox.innerHTML = 
+        `<p class="info-title">CoinCheck by Dan Chilla</p>
+        <p>CoinCheck uses:<br />
+        <span class="info-text"><a href="https://docs.coincap.io/" target="_blank">CoinCap API</a> to retrieve the top 100 cryptocurrencies by 
+        market cap, and their pricing/trading information </span><br />
+        <span class="info-text"><a href="https://min-api.cryptocompare.com/" target="_blank">CryptoCompare API</a> to retrieve top crypto news articles </span> <br />
+        <span class="info-text"><a href="https://coinicons.net/" target="_blank">CoinIcons API</a> to populate icons for each cryptocurrency </span></p>
+        `;
+    container.appendChild(infoBox);
+}
+
 
 //Initialize
 initialLoad();
@@ -316,10 +375,12 @@ function initialLoad() {
     req.open('GET', url);
     req.onerror = () => {
         initialLoad();
+        console.log('error');
     };
     req.onload = () => {
         dataset = JSON.parse(req.responseText);
         values = dataset.data;
+        console.log('loaded');
     };
     req.send();
 }
