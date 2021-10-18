@@ -13,4 +13,4 @@ Search cryptos or news articles with the search bar and relevant results will au
 
 See a live working demo [here](https://dancocreative.com/coin/index.html).
 
-Built as a mobile web app, using XHR. Will be updated to use fetchAPI instead, with break points added for more attractive desktop and tablet displays.
+Built as a mobile web app, will be updated with break points for more attractive desktop and tablet displays.
