@@ -2,6 +2,7 @@ body {
     background-color: #bdc3c7;
     color: #2c3e50;
     font-family: 'Arial', sans-serif;
+    font-size: 16px;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -160,13 +161,14 @@ main {
 .coin-box-square {
     background-color: #ecf0f1;
     width: 22%;
-    height: 13vh;
+    height: 10vh;
     margin: .3em;
     border-radius: .75em;
     padding: 1em;
     display: flex;
     flex-direction: column;
     justify-content: center;
+    align-items: center;
     text-align: right;
 }
 
@@ -175,11 +177,11 @@ main {
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    padding: .25em;
     font-size: .9em;
     max-width: 100%;
-    overflow: hidden;
+    /*overflow: hidden;*/
     text-align: left;
+    box-sizing: border-box;
 }
 
 .symbol-square {
@@ -192,7 +194,7 @@ main {
 
 .percent-change-square {
     font-size: 1.3em;
-    padding: 1em 0 0 0;
+    padding: .5em 0 0 0;
 }
 
 .volume-box {
@@ -408,4 +410,29 @@ nav {
 .info-text {
     display: inline-block;
     padding: 1em;
+}
+
+@media only screen and (min-width: 481px) {
+    header {
+        height: 8vh;
+    }
+
+    main {
+        height: 86vh;
+    }
+
+    .coin-box-square {
+        height: auto;
+        margin: .5em;
+    }
+
+    .head-span-square {
+        font-size: 1.2em;
+        padding: .5em;
+    }
+
+    .percent-change-square {
+        font-size: 2em;
+        text-align: center;
+    }
 }

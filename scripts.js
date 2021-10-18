@@ -1,13 +1,9 @@
 url = 'https://api.coincap.io/v2/assets';
 newsUrl = 'https://min-api.cryptocompare.com/data/v2/news/?lang=EN&api_key=f765105d033d75bf98e339c6a007f9df7044f770d08efe106e6df4398926740a&sortOrder=popular';
-const req = new XMLHttpRequest();
 
-let dataset = [];
 let values = [];
 let icons = [];
-let news;
 let articles = [];
-let homeDataset = [];
 let homeData = [];
 
 const container = document.getElementById('content');
@@ -63,6 +59,7 @@ searchBar.addEventListener('keyup', (e) => {
 
 //Error Handling
 function reloadPage() {
+    clearContainer();
     if (activePage === 'topCoins') { getCoins(); }
     else if (activePage === 'news') { getNews(); }
     else if (activePage === 'home') { loadHome(); }
@@ -85,43 +82,46 @@ function loadHome() {
     clearContainer();
     clearField();
     activePage = 'home';
-    req.open('GET', url);
-    req.onload = () => {
-        homeDataset = JSON.parse(req.responseText);
-        homeData = homeDataset.data;
 
-        let volumeArr = homeData.sort((a, b) => b.volumeUsd24Hr - a.volumeUsd24Hr);
-        let topVolume = volumeArr.slice(0, 6);
-        let sortedArr = homeData.sort((a, b) => b.changePercent24Hr - a.changePercent24Hr);
-        let topThree = sortedArr.slice(0, 3);
-        let bottomThree = sortedArr.slice(sortedArr.length - 3);
-        topThree.forEach(coin => createSquareCard(coin));
-        bottomThree.reverse().forEach(coin => createSquareCard(coin));
-        topVolume.forEach(coin => createVolCard(coin));
-    
-        let gainLossHead = document.createElement('div');
-        gainLossHead.classList.add('home-section-header');
-        gainLossHead.innerHTML = 
-            `<div class="header-wrap">
-            <h3 class="section-title">Top Movers</h3>
-            </div>
-            `;
-        gainLossHead.style.order = 1;
-        container.appendChild(gainLossHead);
-    
-        let volumeHead = document.createElement('div');
-        volumeHead.classList.add('home-section-header');
-        volumeHead.innerHTML = 
-            `<div class="header-wrap">
-            <h3 class="section-title">Top Trading Volume 24hrs</h3>
-            </div>
-            `;
-        volumeHead.style.order = 3;
-        container.appendChild(volumeHead);
-    };
-    req.onerror = () => { reloadPage(); };
-    req.send();
-
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            if (!container.firstChild) { 
+                homeData = data.data;
+                values = data.data;
+                let volumeArr = homeData.sort((a, b) => b.volumeUsd24Hr - a.volumeUsd24Hr);
+                let topVolume = volumeArr.slice(0, 6);
+                let sortedArr = homeData.sort((a, b) => b.changePercent24Hr - a.changePercent24Hr);
+                let topThree = sortedArr.slice(0, 3);
+                let bottomThree = sortedArr.slice(sortedArr.length - 3);
+                topThree.forEach(coin => createSquareCard(coin));
+                bottomThree.reverse().forEach(coin => createSquareCard(coin));
+                topVolume.forEach(coin => createVolCard(coin));
+            
+                let gainLossHead = document.createElement('div');
+                gainLossHead.classList.add('home-section-header');
+                gainLossHead.innerHTML = 
+                    `<div class="header-wrap">
+                    <h3 class="section-title">Top Movers</h3>
+                    </div>
+                    `;
+                gainLossHead.style.order = 1;
+                container.appendChild(gainLossHead);
+            
+                let volumeHead = document.createElement('div');
+                volumeHead.classList.add('home-section-header');
+                volumeHead.innerHTML = 
+                    `<div class="header-wrap">
+                    <h3 class="section-title">Top Trading Volume 24hrs</h3>
+                    </div>
+                    `;
+                volumeHead.style.order = 3;
+                container.appendChild(volumeHead);
+            }
+        })
+        .catch(error => {
+            reloadPage();
+        })
 }
 
 function drawBoxes() {
@@ -300,23 +300,21 @@ function drawCoinPage(coin) {
             </div>
         </div>
         `;
-    let coinNews = [];
     let coinArticles = [];
     let coinNewsUrl = newsUrl;
-    req.open('GET', coinNewsUrl);
-    req.onload = () => {
-        coinNews = JSON.parse(req.responseText);
-        coinArticles = coinNews.Data;
-        let thisArticles = coinArticles.filter(article => {
-            return (
-                article.title.includes(coin.symbol) ||
-                article.title.toLowerCase().includes(coin.id) ||
-                article.categories.includes(coin.symbol) ||
-                article.categories.toLowerCase().includes(coin.id)
-            )});
-        thisArticles.forEach(article => createNewsCard(article));
-    };
-    req.send();
+    fetch(coinNewsUrl)
+        .then(response => response.json())
+        .then(data => {
+            coinArticles = data.Data;
+            let thisArticles = coinArticles.filter(article => {
+                return (
+                    article.title.includes(coin.symbol) ||
+                    article.title.toLowerCase().includes(coin.id) ||
+                    article.categories.includes(coin.symbol) ||
+                    article.categories.toLowerCase().includes(coin.id)
+                )});
+            thisArticles.forEach(article => createNewsCard(article));
+        })
     container.appendChild(wrapper);
 }
 
@@ -366,49 +364,34 @@ function showAppInfo() {
 
 
 //Initialize
-initialLoad();
 loadHome();
 
 
 //API Calls
-function initialLoad() {
-    req.open('GET', url);
-    req.onerror = () => {
-        initialLoad();
-        console.log('error');
-    };
-    req.onload = () => {
-        dataset = JSON.parse(req.responseText);
-        values = dataset.data;
-        console.log('loaded');
-    };
-    req.send();
-}
-
 function getCoins() {
     activePage = 'topCoins';
-    req.open('GET', url);
-    /*req.onprogress = () => {
-        if (activePage === 'topCoins') { loadingContent(); }
-    };*/
-    req.onerror = () => {
-        reloadPage();
-    };
-    req.onload = () => {
-        dataset = JSON.parse(req.responseText);
-        values = dataset.data;
-        drawBoxes();
-    };
-    req.send();
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            values = data.data;
+            drawBoxes();
+        })
+        .catch(error => {
+            getCoins();
+            console.log(error);
+        })
 }
 
 function getNews() {
     activePage = 'news';
-    req.open('GET', newsUrl);
-    req.onload = () => {
-        news = JSON.parse(req.responseText);
-        articles = news.Data;
-        drawNews();
-    };
-    req.send();
+    fetch(newsUrl)
+        .then(response => response.json())
+        .then(data => {
+            articles = data.Data;
+            drawNews();
+        })
+        .catch(error => {
+            getNews();
+            console.log(error);
+        })
 }
