@@ -238,13 +238,26 @@ main {
     width: 100%;
 }
 
+.top-bar {
+    width: 100%;
+    font-size: 2em;
+    text-align: right;
+}
+
+.close-page {
+    padding: .5em;
+    padding-bottom: 0;
+    transform: scale(.75);
+    opacity: .5;
+}
+
 .head-span-big {
     width: 100%;
     display: flex;
     justify-content: space-between;
     align-items: center;
     font-size: 2em;
-    padding: 1em;
+    padding: .5em;
     box-sizing: border-box;
     border-bottom: 1px solid #aab0b3;
 }
@@ -254,7 +267,12 @@ main {
 }
 
 .coin-icon-big {
-    padding: .5em;
+    padding: .25em;
+}
+
+.coin-icon-big img {
+    max-width: 130px;
+    max-height: 130px;
 }
 
 .stats-wrap {
@@ -269,14 +287,6 @@ main {
     box-sizing: border-box;
     border-bottom: 1px solid #aab0b3;
     padding: 0 1em;
-}
-
-.close-page {
-    position: absolute;
-    top: 2.25em;
-    right: .2em;
-    transform: scale(.75);
-    opacity: .5;
 }
 
 .bold {
@@ -354,6 +364,7 @@ nav {
 .article-text-box {
     height: 100%;
     width: 80%;
+    padding-top: .25em;
     display: flex;
     flex-direction: column;
     justify-content: space-around;
@@ -367,6 +378,7 @@ nav {
 .article-body {
     font-size: .9em;
     padding-bottom: 1em;
+    width: 100%;
     /* overflow ellipsis
     overflow: hidden;
     display: -webkit-box;
@@ -389,7 +401,7 @@ nav {
 }
 
 .active-article {
-    width: auto;
+    width: 100%;
     height: 100%;
 }
 
@@ -413,8 +425,16 @@ nav {
 }
 
 @media only screen and (min-width: 481px) {
+    body {
+        font-size: 16px;
+    }
+
     header {
         height: 8vh;
+    }
+
+    .search-bar {
+        font-size: 1.25em;
     }
 
     main {
@@ -424,6 +444,7 @@ nav {
     .coin-box-square {
         height: auto;
         margin: .5em;
+        min-width: 200px;
     }
 
     .head-span-square {

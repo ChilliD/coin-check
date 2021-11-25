@@ -139,7 +139,8 @@ function drawNews() {
 
 function createSquareCard(coin) {
     let squareBox = document.createElement('div');
-    let iconUrl = `https://api.coinicons.net/icon/` + coin.symbol + `/64x64`;
+    //let iconUrl = `https://api.coinicons.net/icon/` + coin.symbol + `/64x64`;
+    let iconUrl = `https://cryptoicon-api.vercel.app/api/icon/` + coin.symbol.toLowerCase();
     squareBox.id = coin.id + 'square';
     let formattedPrice = formatNum.format(coin.priceUsd);
     let formattedChange = formatNum.format(coin.changePercent24Hr);
@@ -164,7 +165,8 @@ function createSquareCard(coin) {
 
 function createVolCard(coin) {
     let volBox = document.createElement('div');
-    let iconUrl = `https://api.coinicons.net/icon/` + coin.symbol + `/64x64`;
+    //let iconUrl = `https://api.coinicons.net/icon/` + coin.symbol + `/64x64`;
+    let iconUrl = `https://cryptoicon-api.vercel.app/api/icon/` + coin.symbol.toLowerCase();
     volBox.id = coin.id + 'vol';
     let formattedPrice = formatNum.format(coin.priceUsd);
     let formattedVol = formatVol.format(coin.volumeUsd24Hr);
@@ -185,7 +187,8 @@ function createVolCard(coin) {
 
 function createCard(coin) {
     let coinBox = document.createElement('div');
-    let iconUrl = `https://api.coinicons.net/icon/` + coin.symbol + `/64x64`;
+    //let iconUrl = `https://api.coinicons.net/icon/` + coin.symbol + `/64x64`;
+    let iconUrl = `https://cryptoicon-api.vercel.app/api/icon/` + coin.symbol.toLowerCase();
     coinBox.id = coin.id;
     let formattedPrice = formatNum.format(coin.priceUsd);
     let formattedChange = formatNum.format(coin.changePercent24Hr);
@@ -249,7 +252,7 @@ function createNewsCard(article) {
                 <span class="article-body">${article.body}</span>
                 <div class="article-bottom">
                 <span class="article-date">${articleDate.toLocaleDateString()}</span>
-                <span class="article-source">Source: <a href="${article.url}" target="_blank">${article.source}</a></span>
+                <span class="article-source">Full Article: <a href="${article.url}" target="_blank">${article.source}</a></span>
                 </div></div>
                 `;
             }
@@ -267,15 +270,18 @@ function drawCoinPage(coin) {
     let formattedMaxSupply = formatNumNoDec.format(coin.maxSupply);
     let formattedCap = formatNumNoDec.format(coin.marketCapUsd);
     let formattedVol = formatVol.format(coin.volumeUsd24Hr);
-    let iconUrl = `https://api.coinicons.net/icon/` + coin.symbol + `/64x64`;
+    //let iconUrl = `https://api.coinicons.net/icon/` + coin.symbol + `/64x64`;
+    let iconUrl = 'https://cryptoicon-api.vercel.app/api/icon/' + coin.symbol.toLowerCase();
     wrapper.classList.add('coin-wrap');
     wrapper.innerHTML = 
         `
+        <div class="top-bar">
+        <i id="close-page" class="far fa-times-circle close-page" onclick="reloadPage()"></i>
+        </div>
         <div class="head-span-big">
             <div class="title-span">
             <span class="page-title">${coin.name}</span><br />
             <span class="coin-symbol">${coin.symbol}</span>
-            <i id="close-page" class="far fa-times-circle close-page" onclick="reloadPage()"></i>
             </div>
             <span class="coin-icon-big"><img src="${iconUrl}"></img></span>
         </div>
@@ -322,6 +328,8 @@ function clearContainer() {
     while (container.firstChild) {
         container.removeChild(container.lastChild);
     }
+
+    container.scrollTo(0 ,0);
 }
 
 function clearField() {
@@ -357,7 +365,9 @@ function showAppInfo() {
         <span class="info-text"><a href="https://docs.coincap.io/" target="_blank">CoinCap API</a> to retrieve the top 100 cryptocurrencies by 
         market cap, and their pricing/trading information </span><br />
         <span class="info-text"><a href="https://min-api.cryptocompare.com/" target="_blank">CryptoCompare API</a> to retrieve top crypto news articles </span> <br />
-        <span class="info-text"><a href="https://coinicons.net/" target="_blank">CoinIcons API</a> to populate icons for each cryptocurrency </span></p>
+        <span class="info-text" style="text-decoration: line-through"><a href="https://coinicons.net/" target="_blank">CoinIcons API</a> to populate icons for each cryptocurrency </span></p>
+        <p>Coin Icons isn't working for the time being, so <a href="https://cryptoicon-api.vercel.app/">https://cryptoicon-api.vercel.app/</a> is currently being utilized, though several icons are missing.</p>
+        
         `;
     container.appendChild(infoBox);
 }
@@ -369,6 +379,7 @@ loadHome();
 
 //API Calls
 function getCoins() {
+    container.scrollTo(0 ,0);
     activePage = 'topCoins';
     fetch(url)
         .then(response => response.json())
@@ -383,6 +394,7 @@ function getCoins() {
 }
 
 function getNews() {
+    container.scrollTo(0 ,0);
     activePage = 'news';
     fetch(newsUrl)
         .then(response => response.json())
